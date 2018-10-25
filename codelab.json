@@ -1,0 +1,25 @@
+{
+   "environment": "web",
+   "source": "",
+   "format": "md",
+   "prefix": "../../",
+   "mainga": "",
+   "updated": "",
+   "id": "here-alexa",
+   "duration": 67,
+   "title": "Search for nearby places on Alexa with HERE Location Services",
+   "author": "dbabbs",
+   "summary": "In this codelab you will learn how to create an Alexa skill with HERE Location Services.",
+   "theme": "web",
+   "status": [
+      "draft"
+   ],
+   "category": [
+      "Web"
+   ],
+   "tags": [
+      "web"
+   ],
+   "feedback": "",
+   "url": ""
+}
