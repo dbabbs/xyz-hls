@@ -453,8 +453,247 @@ In this tutorial, you've learned how to:
 
 * create XYZ Spaces and upload data with the HERE command line interface.
 * transform addresses to coordinates with the HERE Geocoding API.
-* create routing requests with the HERE Routing API
-* develop interactive mapping applications with Leaflet and Tangram
+* create routing requests with the HERE Routing API.
+* develop interactive mapping applications with Leaflet and Tangram.
 * and navigate to nearby Seattle drinking fountains!
 
 This is just a basic example of what can be done with HERE Location Services and XYZ, take a look at the HERE Developer blog to see more examples of creative and useful applications of HERE Location Services and XYZ.
+
+## Appendix: full code samples
+
+### `index.html`
+
+```html
+<html lang="en-us">
+
+<head>
+   <meta charset="utf-8">
+   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>Seattle Drinking Fountains</title>
+
+   <link rel="stylesheet" href="style.css">
+
+   <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+   <script src="https://unpkg.com/tangram/dist/tangram.min.js"></script>
+   <script src="polyline-animation.js"></script>
+   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+</head>
+
+<body>
+   <div id="control">
+      <h3>Seattle Drinking Fountains Routing</h3>
+      <p>
+         Starting position
+      </p>
+      <input type="text" value="701 Pike St Seattle" id="start" />
+      <button id="change-start">Change</button>
+      <p>
+         Routing options
+      </p>
+      <form id="routing-mode" action="">
+         <input type="radio" name="routing-mode" id="walking" value="pedestrian" checked> Walking<br>
+         <input type="radio" name="routing-mode" id="driving" value="car"> Driving
+      </form>
+      <button id="clear">Clear polylines</button>
+   </div>
+   <div id="map"></div>
+   <script src="index.js" type="text/javascript"></script>s
+</body>
+
+</html>
+```
+
+### `index.js`
+```js
+
+const here = {
+   id: 'HERE-APP-ID',
+   code: 'HERE-APP-CODE'
+};
+
+const map = L.map('map', {
+   center: [47.608013, -122.335167],
+   zoom: 13,
+   layers: [
+      Tangram.leafletLayer({
+         scene: 'scene.yaml',
+         events: {
+            click: onMapClick
+         }
+      })
+   ],
+   zoomControl: false
+});
+
+let startCoordinates = '';
+
+document.getElementById('clear').onclick = clearMap;
+document.getElementById('change-start').onclick = addStartingMarker;
+addStartingMarker();
+
+async function geocode(query) {
+   const url = `https://geocoder.api.here.com/6.2/geocode.json?app_id=${here.id}&app_code=${here.code}&searchtext=${query}`
+   const response = await fetch(url);
+   const data = await response.json();
+   return await data.Response.View[0].Result[0].Location.NavigationPosition[0];
+}
+
+async function route(start, end) {
+   const mode = document.querySelector('input[name="routing-mode"]:checked').value;
+   const url = `https://route.api.here.com/routing/7.2/calculateroute.json?app_id=${here.id}&app_code=${here.code}&waypoint0=geo!${start}&waypoint1=geo!${end}&mode=fastest;${mode};traffic:disabled&routeattributes=shape`
+   const response = await fetch(url);
+   const data = await response.json();
+   return await data.response.route[0];
+}
+
+function clearMap() {
+   map.eachLayer((layer) => {
+      if (!layer.hasOwnProperty('_updating_tangram') && !layer.options.hasOwnProperty('alt')) {
+         map.removeLayer(layer);
+      }
+   });
+}
+
+async function addStartingMarker() {
+   clearMap();
+   const startAddress = document.getElementById('start').value;
+   startCoordinates = await geocode(startAddress);
+   const startingCircle = L.marker([startCoordinates.Latitude, startCoordinates.Longitude], {alt: 'start'}).addTo(map);
+}
+
+async function onMapClick(selection) {
+   if (selection.feature) {
+      const endCoordinates = `${selection.leaflet_event.latlng.lat},${selection.leaflet_event.latlng.lng}`;
+      const routeData = await route(`${startCoordinates.Latitude},${startCoordinates.Longitude}`, endCoordinates);
+      const shape = routeData.shape.map(x => x.split(","));
+      const poly = L.polyline(shape).addTo(map).snakeIn();
+   }
+}
+```
+
+### `scene.yaml`
+```yaml
+cameras:
+    camera1:
+        type: perspective
+
+lights:
+    light1:
+        type: directional
+        direction: [0, 1, -.5]
+        diffuse: .3
+        ambient: 1
+
+sources:
+    mapzen:
+        type: TopoJSON
+        url: https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.topojson
+        url_params:
+            api_key: 3XqXMjEdT2StnrIRJ4HYbg
+        max_zoom: 16
+    offices:
+        url: https://xyz.api.here.com/hub/spaces/XYZ-SPACE-ID/tile/web/{z}_{x}_{y}
+        type: GeoJSON
+        url_params:
+            access_token: XYZ-TOKEN
+
+layers:
+    offices:
+        data: {source: offices}
+        draw:
+            points:
+                color: purple
+                size: 15px
+                interactive: true
+    earth:
+        data: { source: mapzen }
+        draw:
+            polygons:
+                order: function() { return feature.sort_rank; }
+                color: '#ddeeee'
+
+    landuse:
+        data: { source: mapzen }
+        draw:
+            polygons:
+                order: function() { return feature.sort_rank; }
+                color: '#aaffaa'
+
+    water:
+        data: { source: mapzen }
+        draw:
+            polygons:
+                order: function() { return feature.sort_rank; }
+                color: '#88bbee'
+
+    roads:
+        data: { source: mapzen }
+        filter:
+            not: { kind: [path, rail, ferry] }
+        draw:
+            lines:
+                order: function() { return feature.sort_rank; }
+                color: gray
+                width: 8
+                cap: round
+        highway:
+            filter:
+                kind: highway
+            draw:
+                lines:
+                    order: function() { return feature.sort_rank; }
+                    color: '#cc6666'
+                    width: 12
+                    outline:
+                        color: grey
+                        width: 1.5
+        minor_road:
+            filter:
+                kind: minor_road
+            draw:
+                lines:
+                    order: function() { return feature.sort_rank; }
+                    color: lightgrey
+                    width: 5
+
+    buildings:
+        data: { source: mapzen }
+        draw:
+            polygons:
+                order: function() { return feature.sort_rank; }
+                color: lightgrey
+        3d-buildings:
+            filter: { $zoom: { min: 15 } }
+            draw:
+                polygons:
+                    extrude: function () { return feature.height > 20 || $zoom >= 16; }
+```
+
+### `style.css`
+```css
+body {
+   margin: 0px;
+   border: 0px;
+   padding: 0px;
+   font-family: sans-serif;
+   color: #333;
+}
+
+#map {
+   height: 100%;
+   width: 100%;
+   position: absolute;
+}
+
+#control {
+   width: 300px;
+   height: 100%;
+   position: absolute;
+   top: 0;
+   left: 0;
+   background-color: white;
+   z-index: 1000;
+   padding: 15px;
+}
+```
