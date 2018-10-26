@@ -5,8 +5,6 @@
 
 *Duration is 3 min*
 
-
-
 This codelab will walk you through combining HERE XYZ and HERE Location Services to create an interactive routing application. Using a public data source of [drinking fountains in Seattle](https://data.seattle.gov/Parks-and-Recreation/Seattle-Parks-and-Recreation-GIS-Map-Layer-Shapefi/m78m-bdc6) the user of the application will be able visualize the path from a specified starting location to a drinking fountain location. The drinking fountain dataset will be stored in an XYZ Space.
 
 The result of this tutorial will be an interactive map application rendered with [Leaflet](https://leafletjs.com/) and [Tangram](https://github.com/tangrams/tangram).
@@ -179,7 +177,7 @@ body {
 }
 ```
 
-Last but not least, create a file title `index.js` with the following code:
+Last but not least, create a file titled `index.js` with the following code:
 ```js
 const here = {
    id: 'HERE-APP-ID',
@@ -200,7 +198,7 @@ const map = L.map('map', {
    zoomControl: false
 });
 
-function onMapClick() {
+async function onMapClick() {
 
 }
 ```
@@ -213,9 +211,11 @@ At this point, you should have created four files in your project directory:
 * `index.html`
 * `index.js`
 * `style.css`
-* `polyline-animation.s`
+* `polyline-animation.js`
 
 ## Configuring the Tangram layer
+
+*Duration is 5 min*
 
 So far, we've uploaded data to the XYZ Space and carved out our web application's basic code skeleton. In this section, we'll focus on getting getting our Leaflet/Tangram map up and running.
 
@@ -307,11 +307,13 @@ layers:
                     extrude: function () { return feature.height > 20 || $zoom >= 16; }
 ```
 
-Quick checkpoint, let's open up the index.html file and take a quick peak at the application. If all goes well, you should be seeing the following:
+Quick checkpoint: let's open up the index.html file and take a peak at the application. If all goes well, you should be seeing the following:
 
 ![checkpoint](img/2.png)
 
-## Adding Drinking Fountain Data to the map
+## Adding drinking fountain data to the map
+
+*Duration is 5 min*
 
 Now that the map is configured, let's add the drinking fountain data to it from the XYZ Space.
 
@@ -367,6 +369,8 @@ The function `geocode()` takes in a parameter, `query`, and pumps it through the
 
 ## Adding routing capabilities to the map
 
+*Duration is 5 min*
+
 We now have two points:
 * the starting location specified by the user in the input form (and then geocoded)
 * the location of a particular drinking fountain in the XYZ Space (the user will click on this)
@@ -385,6 +389,8 @@ async function route(start, end) {
 This function takes in two sets of coordinates (start and end) and returns an object with routing information. Since we would like shape information of the route, we added on `&routeattributes=shape` onto our request URL. For additional routing features and parameters, be sure to check out the Routing API [documentation](https://developer.here.com/documentation/routing/topics/request-constructing.html).
 
 ## Putting it all together
+
+*Duration is 10 min*
 
 Now that we have our map, geocoding function, and routing function complete, let's start tying it all together with some interactivity.
 
@@ -433,6 +439,22 @@ async function onMapClick(selection) {
 }
 ```
 
-```js
-//TODO: fix mapclear() to not always get rid of marker
-```
+## Summary
+
+*Duration is 2 min*
+
+Congratulations! You've completed this tutorial.
+
+Your final result should look like:
+
+![done](img/0.png)
+
+In this tutorial, you've learned how to:
+
+* create XYZ Spaces and upload data with the HERE command line interface.
+* transform addresses to coordinates with the HERE Geocoding API.
+* create routing requests with the HERE Routing API
+* develop interactive mapping applications with Leaflet and Tangram
+* and navigate to nearby Seattle drinking fountains!
+
+This is just a basic example of what can be done with HERE Location Services and XYZ, take a look at the HERE Developer blog to see more examples of creative and useful applications of HERE Location Services and XYZ.
