@@ -5,7 +5,7 @@
 
 *Duration is 3 min*
 
-This codelab will walk you through combining HERE XYZ and HERE Location Services to create an interactive routing application. Using a public data source of [drinking fountains in Seattle](https://data.seattle.gov/Parks-and-Recreation/Seattle-Parks-and-Recreation-GIS-Map-Layer-Shapefi/m78m-bdc6) the user of the application will be able visualize the path from a specified starting location to a drinking fountain location. The drinking fountain dataset will be stored in an XYZ Space.
+This codelab will walk you through combining [HERE XYZ](https://www.here.xyz/) and [HERE Location Services](https://developer.here.com/documentation) to create an interactive routing application. Using a public data source of [drinking fountains in Seattle](https://data.seattle.gov/Parks-and-Recreation/Seattle-Parks-and-Recreation-GIS-Map-Layer-Shapefi/m78m-bdc6), the user of the application will be able visualize the path from a specified starting location to a drinking fountain location. The drinking fountain dataset will be stored in an XYZ Space.
 
 The result of this tutorial will be an interactive map application rendered with [Leaflet](https://leafletjs.com/) and [Tangram](https://github.com/tangrams/tangram).
 
@@ -14,17 +14,11 @@ The result of this tutorial will be an interactive map application rendered with
 This codelab demonstrates the use of multiple HERE products:
 * [HERE Location Services Geocoder API](https://developer.here.com/documentation/geocoder/topics/quick-start-geocode.html)
 * [HERE Location Services Places API](https://developer.here.com/documentation/places/topics/quick-start-find-text-string.html)
-* [HERE XYZ Spaces](https://www.here.xyz/)
+* [HERE XYZ Spaces](https://www.here.xyz/api)
 
 ### __What is the Geocoder API?__
 
 The Geocoder REST API enables developers to convert street addresses to geo-coordinates and vice-versa with forward geocoding, including landmarks, and reverse geocoding.
-
-The HERE Geocoder API is a REST API that allows you to:
-
-* Obtain coordinates for addresses
-* Obtain addresses or administrative areas for locations
-* Obtain coordinates for known landmarks.
 
 ### __What is the Places API?__
 
@@ -33,6 +27,10 @@ The Places (Search) API is a REST API that allows you to build applications wher
 ### __What is a HERE XYZ Space?__
 
 HERE XYZ is an open, interoperable and real-time location data management service from HERE Technologies that offers simple APIs, SDKs, components, and interactive tools that enable everyone to make maps easier and faster.
+
+An XYZ Space is a real-time cloud-based location hub for discovering, storing, retrieving, manipulating and publishing private or public mapping data.
+
+
 
 ### __What you'll need__
 
@@ -45,17 +43,17 @@ HERE XYZ is an open, interoperable and real-time location data management servic
 
 To get started, download the [Seattle Drinking Fountain dataset](https://data.seattle.gov/Parks-and-Recreation/Seattle-Parks-and-Recreation-GIS-Map-Layer-Shapefi/m78m-bdc6) from Seattle's Open Data Website.
 
-Click on the export button in the top right, and then *GeoJSON* link:
+Click on the export button in the top right, and then the *GeoJSON* link.
 
-![download page](img/1.png)
+Alternatively, you can download the file directly from [this link](/fountains.geojson).
 
 Move the file into your project's directory. For convenience, I renamed the file `fountains.geojson`
 
-## Uploading data from an XYZ Space
+## Uploading data to an XYZ Space
 
 *Duration is 12 min*
 
-The first task we'll accomplish is uploading the data to an XYZ Space. XYZ Spaces are powerful geospatial databases that can store millions of rows. A great benefit about XYZ Spaces, is that they automatically tile the data; meaning that the data can be query efficiently for map display.
+The first task we'll accomplish is uploading the data to an XYZ Space. XYZ Spaces, part of the XYZ Hub API, are powerful geospatial databases that can store millions of rows. A great benefit about XYZ Spaces, is that they automatically tile the data; meaning that the data can be queried efficiently for map display.
 
 For more information about XYZ Spaces, take a look at the [documentation](https://www.here.xyz/api/).
 
@@ -66,9 +64,13 @@ There are many ways to upload data to an XYZ Space:
 - via the [HERE Command Line Interface](https://www.here.xyz/cli/) (CLI)
 
 I prefer the CLI because of its ease of use. To install the CLI, run the command:
+
 ```
 npm install -g @here/cli
 ```
+
+(At anytime if you get lost during CLI installation, feel free to visit the [XYZ CLI tutorial](https://codelabs.here.xyz/tutorial/02-using-the-here-cli#0).)
+
 Next, configure your credentials by running:
 ```
 here configure set
@@ -103,11 +105,18 @@ Congrats! We've now created a new XYZ Space and uploaded data. To verify you've 
 ```
 here xyz show YOUR_SPACE_ID -w
 ```
-This command will open up the space in the [HERE XYZ GeoJSON viewer](http://geojson.tools/).
+This command will open up the space in the [HERE XYZ GeoJSON viewer](http://geojson.tools/):
+
+![geojson viewer](img/4.png)
 
 ## Setting up HTML, JavaScript and CSS skeleton
 
 So far we've uploaded data to our XYZ Space, now let's begin creating our web application skeleton.
+
+By the end of this step, you will have created 3 files in your project directory:
+* `index.html`
+* `style.css`
+* `index.js`
 
 Create a new `index.html` file with the following code:
 ```html
@@ -117,7 +126,7 @@ Create a new `index.html` file with the following code:
    <link rel="stylesheet" href="style.css">
    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
    <script src="https://unpkg.com/tangram/dist/tangram.min.js"></script>
-   <script src="polyline-animation.js"></script>
+   <script src="https://cdn.jsdelivr.net/gh/IvanSanchez/Leaflet.Polyline.SnakeAnim/L.Polyline.SnakeAnim.js"></script>
    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
 </head>
 
@@ -143,11 +152,9 @@ Create a new `index.html` file with the following code:
 </body>
 </html>
 ```
-In the above code, we have laid out the template for:
-* a map, with the div of id `map`
+In the above code, we've configured the template for:
+* a map, with the div of id `map`.
 * a control sidebar, with the id `control`. The sidebar is where we can configure options for the routing and map view.
-
-Additionally, be sure to download the file [`polyline-animation.js`](polyline-animation.js). This file will animation the polylines on the map during routing.
 
 As for the CSS, create a new file titled `style.css` with the following code:
 ```css
@@ -199,25 +206,19 @@ const map = L.map('map', {
 });
 
 async function onMapClick() {
-
+   //We will write code in here later...
 }
 ```
 
 The above code initiates the Leaflet map with a Tangram vector layer. Don't try to run the project yet--it is still missing some components.
 
-Additionally, be sure replace `HERE-APP-ID` and `HERE-APP-CODE` with your own credentials obtained on the [HERE Developer Portal](https://developer.here.com)
-
-At this point, you should have created four files in your project directory:
-* `index.html`
-* `index.js`
-* `style.css`
-* `polyline-animation.js`
+Additionally, be sure replace `HERE-APP-ID` and `HERE-APP-CODE` with your own credentials obtained on the [HERE Developer Portal](https://developer.here.com).
 
 ## Configuring the Tangram layer
 
 *Duration is 5 min*
 
-So far, we've uploaded data to the XYZ Space and carved out our web application's basic code skeleton. In this section, we'll focus on getting getting our Leaflet/Tangram map up and running.
+So far, we've uploaded data to the XYZ Space and carved out our web application's basic code skeleton. In this section, we'll focus on getting our Leaflet/Tangram map up and running.
 
 Go ahead and create a new file `scene.yaml`. A YAML scene file is a file Tangram uses to interpret map styling rules. In this file, we'll be configuring styling rules that not only style cartography objects like parks, roads and builings, but also our very own drinking fountain data.
 
@@ -235,37 +236,35 @@ lights:
         ambient: 1
 
 sources:
-    mapzen:
-        type: TopoJSON
-        url: https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.topojson
-        url_params:
-            api_key: 3XqXMjEdT2StnrIRJ4HYbg
+    xyz_osm:
+        type: MVT
+        url: https://xyz.api.here.com/tiles/osmbase/256/all/{z}/{x}/{y}.mvt
         max_zoom: 16
 
 layers:
     earth:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#ddeeee'
 
     landuse:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#aaffaa'
 
     water:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#88bbee'
 
     roads:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         filter:
             not: { kind: [path, rail, ferry] }
         draw:
@@ -295,7 +294,7 @@ layers:
                     width: 5
 
     buildings:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
@@ -310,6 +309,11 @@ layers:
 Quick checkpoint: let's open up the index.html file and take a peak at the application. If all goes well, you should be seeing the following:
 
 ![checkpoint](img/2.png)
+
+You may need to set up a local server in order for the map to render properly. For example, on a mac, you can try something like:
+```
+python -m SimpleHTTPServer 8888
+```
 
 ## Adding drinking fountain data to the map
 
@@ -341,6 +345,8 @@ fountains:
 ```
 
 First, we added the data source inside of the `sources` section. Then, we configured the fountains dataset as a layer inside of `layers`. Ensure that `interactive` is set to `true`. This will be important when we try to interact with the data inside on the map.
+
+If you are curious about how the Tangram scene file works, I recommend taking a look at the [official documentation](https://mapzen.com/documentation/tangram/Scene-file/).
 
 Now, let's take a look back at our map. Refresh the page and you should see the map populated with purple markers!
 
@@ -394,7 +400,7 @@ This function takes in two sets of coordinates (start and end) and returns an ob
 
 Now that we have our map, geocoding function, and routing function complete, let's start tying it all together with some interactivity.
 
-Insert the following near the top in `index.js`:
+Insert the following after the map initialization in `index.js`:
 ```js
 let startCoordinates = '';
 
@@ -449,6 +455,8 @@ Your final result should look like:
 
 ![done](img/0.png)
 
+You may be wondering why Leaflet and Tangram were used in this tutorial, as opposed to the [HERE JavaScript API](https://developer.here.com/develop/javascript-api). HERE XYZ is all about interoperability with 3rd party and open source tools, so we wanted to provide an example of XYZ Spaces and Leaflet and Tangram. HERE XYZ can be used with any vector tile renderer of your choice.
+
 In this tutorial, you've learned how to:
 
 * create XYZ Spaces and upload data with the HERE command line interface.
@@ -476,7 +484,7 @@ This is just a basic example of what can be done with HERE Location Services and
 
    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
    <script src="https://unpkg.com/tangram/dist/tangram.min.js"></script>
-   <script src="polyline-animation.js"></script>
+   <script src="https://cdn.jsdelivr.net/gh/IvanSanchez/Leaflet.Polyline.SnakeAnim/L.Polyline.SnakeAnim.js"></script>
    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
 </head>
 
@@ -586,14 +594,12 @@ lights:
         ambient: 1
 
 sources:
-    mapzen:
-        type: TopoJSON
-        url: https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.topojson
-        url_params:
-            api_key: 3XqXMjEdT2StnrIRJ4HYbg
+    xyz_osm:
+        type: MVT
+        url: https://xyz.api.here.com/tiles/osmbase/256/all/{z}/{x}/{y}.mvt
         max_zoom: 16
     offices:
-        url: https://xyz.api.here.com/hub/spaces/XYZ-SPACE-ID/tile/web/{z}_{x}_{y}
+        url: https://xyz.api.here.com/hub/spaces/beKRCknC/tile/web/{z}_{x}_{y}
         type: GeoJSON
         url_params:
             access_token: XYZ-TOKEN
@@ -607,28 +613,28 @@ layers:
                 size: 15px
                 interactive: true
     earth:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#ddeeee'
 
     landuse:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#aaffaa'
 
     water:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#88bbee'
 
     roads:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         filter:
             not: { kind: [path, rail, ferry] }
         draw:
@@ -658,7 +664,7 @@ layers:
                     width: 5
 
     buildings:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
@@ -668,6 +674,7 @@ layers:
             draw:
                 polygons:
                     extrude: function () { return feature.height > 20 || $zoom >= 16; }
+
 ```
 
 ### `style.css`

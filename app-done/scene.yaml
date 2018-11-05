@@ -10,11 +10,9 @@ lights:
         ambient: 1
 
 sources:
-    mapzen:
-        type: TopoJSON
-        url: https://tile.nextzen.org/tilezen/vector/v1/all/{z}/{x}/{y}.topojson
-        url_params:
-            api_key: 3XqXMjEdT2StnrIRJ4HYbg
+    xyz_osm:
+        type: MVT
+        url: https://xyz.api.here.com/tiles/osmbase/256/all/{z}/{x}/{y}.mvt
         max_zoom: 16
     offices:
         url: https://xyz.api.here.com/hub/spaces/beKRCknC/tile/web/{z}_{x}_{y}
@@ -31,28 +29,28 @@ layers:
                 size: 15px
                 interactive: true
     earth:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#ddeeee'
 
     landuse:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#aaffaa'
 
     water:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#88bbee'
 
     roads:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         filter:
             not: { kind: [path, rail, ferry] }
         draw:
@@ -82,7 +80,7 @@ layers:
                     width: 5
 
     buildings:
-        data: { source: mapzen }
+        data: { source: xyz_osm }
         draw:
             polygons:
                 order: function() { return feature.sort_rank; }
