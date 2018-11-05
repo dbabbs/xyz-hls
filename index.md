@@ -354,6 +354,8 @@ Now, let's take a look back at our map. Refresh the page and you should see the 
 
 ## Adding geocoding capabilities to the map
 
+*Duration is 5 min*
+
 In our application's interface, we enable the user to input a starting location for the routing to a drinking fountain. The input takes in addresses, which is easy for us humans to understand. However, maps and services built on top of maps require coordinates instead of addresses. In order to transform addresses to coordinates, we must geocode them. Luckily, HERE has a REST service to do exactly that.
 
 Add the following to `index.js`:

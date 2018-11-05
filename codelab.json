@@ -5,11 +5,11 @@
    "prefix": "../../",
    "mainga": "",
    "updated": "",
-   "id": "here-alexa",
-   "duration": 67,
-   "title": "Search for nearby places on Alexa with HERE Location Services",
+   "id": "here-xyz",
+   "duration": 50,
+   "title": "Use HERE Location Services Routing to navigate to features in an XYZ Space",
    "author": "dbabbs",
-   "summary": "In this codelab you will learn how to create an Alexa skill with HERE Location Services.",
+   "summary": "In this codelab you will learn how to create an interactive routing web application with HERE Location Services and HERE XYZ.",
    "theme": "web",
    "status": [
       "draft"
